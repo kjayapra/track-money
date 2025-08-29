@@ -2,6 +2,7 @@
   "name": "credit-card-tracker",
   "version": "1.0.0",
   "description": "Credit card statement analyzer and expense tracker",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
