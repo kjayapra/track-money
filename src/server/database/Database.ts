@@ -76,14 +76,14 @@ export class Database {
   }
 
   async beginTransaction(): Promise<void> {
-    return this.run('BEGIN TRANSACTION');
+    await this.run('BEGIN TRANSACTION');
   }
 
   async commit(): Promise<void> {
-    return this.run('COMMIT');
+    await this.run('COMMIT');
   }
 
   async rollback(): Promise<void> {
-    return this.run('ROLLBACK');
+    await this.run('ROLLBACK');
   }
 }
