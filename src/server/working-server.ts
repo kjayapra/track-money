@@ -1504,14 +1504,13 @@ app.get('/api/analytics/dashboard', (_req, res) => {
   });
 });
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client')));
-  
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(__dirname, '../client/index.html'));
-  });
-}
+// Static files are served by Vercel, not needed in serverless functions
+// if (process.env.NODE_ENV === 'production') {
+//   app.use(express.static(path.join(__dirname, '../client')));
+//   app.get('*', (_req, res) => {
+//     res.sendFile(path.join(__dirname, '../client/index.html'));
+//   });
+// }
 
 
 // Error handling middleware
