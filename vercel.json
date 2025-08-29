@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/client/dist/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "src/server/working-server.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/src/server/working-server.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/client/dist/$1"
+    }
+  ],
+  "functions": {
+    "src/server/working-server.ts": {
+      "maxDuration": 30
+    }
+  }
+}
