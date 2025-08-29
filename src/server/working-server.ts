@@ -5,7 +5,7 @@ import multer from 'multer';
 import sqlite3 from 'sqlite3';
 import fs from 'fs';
 import csv from 'csv-parser';
-import { initializeDatabase, query as pgQuery, getPool } from './postgres-db';
+import { initializeDatabase, query as pgQuery } from './postgres-db';
 // PDF parsing will be implemented with user's sample file
 
 const app = express();
@@ -603,24 +603,19 @@ app.post('/api/upload', upload.single('statement'), async (req, res) => {
     
     const sourceId = req.body.sourceId || req.body.source_id || 'default_credit_card';
     
-    await new Promise<void>((resolve, reject) => {
-      db.run(`
-        INSERT INTO uploaded_files (
-          id, filename, original_name, file_size, mime_type, source_id, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, [
-        fileId,
-        file.filename,
-        file.originalname,
-        file.size,
-        file.mimetype,
-        sourceId,
-        'processing'
-      ], (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+    await dbRun(`
+      INSERT INTO uploaded_files (
+        id, filename, original_name, file_size, mime_type, source_id, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [
+      fileId,
+      file.filename,
+      file.originalname,
+      file.size,
+      file.mimetype,
+      sourceId,
+      'processing'
+    ]);
 
     // Note: Card information is now stored in the source, not extracted from filename
 
