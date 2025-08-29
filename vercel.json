@@ -1,7 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "outputDirectory": "src/client/dist",
+  "outputDirectory": "dist/client",
   "functions": {
     "src/server/working-server.ts": {
       "maxDuration": 30
@@ -14,7 +14,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/src/client/dist/$1"
+      "dest": "/dist/client/index.html"
     }
   ]
 }
