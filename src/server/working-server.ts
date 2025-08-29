@@ -5,7 +5,7 @@ import multer from 'multer';
 import sqlite3 from 'sqlite3';
 import fs from 'fs';
 import csv from 'csv-parser';
-import { initializeDatabase, query as pgQuery } from './postgres-db';
+import { initializeDatabase, query as pgQuery } from './postgres-db.js';
 // PDF parsing will be implemented with user's sample file
 
 const app = express();
