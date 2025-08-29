@@ -648,19 +648,11 @@ app.post('/api/upload', upload.single('statement'), async (req, res) => {
         const categoryId = categorizeTransaction(tx.description, tx.merchantName);
         
         // Check for duplicate transaction
-        const isDuplicate = await new Promise<boolean>((resolve) => {
-          db.get(`
-            SELECT COUNT(*) as count FROM transactions 
-            WHERE description = ? AND amount = ? AND date = ?
-          `, [tx.description, tx.amount, tx.date.toISOString()], (err, row: any) => {
-            if (err) {
-              console.error('Error checking duplicate:', err);
-              resolve(false); // If error, assume not duplicate
-            } else {
-              resolve((row?.count || 0) > 0);
-            }
-          });
-        });
+        const row = await dbGet(`
+          SELECT COUNT(*) as count FROM transactions 
+          WHERE description = ? AND amount = ? AND date = ?
+        `, [tx.description, tx.amount, tx.date.toISOString()]);
+        const isDuplicate = (row?.count || 0) > 0;
 
         if (isDuplicate) {
           duplicateCount++;
@@ -670,29 +662,22 @@ app.post('/api/upload', upload.single('statement'), async (req, res) => {
 
         const id = 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
-        await new Promise<void>((resolve, reject) => {
-          db.run(`
-            INSERT INTO transactions (
-              id, amount, description, merchant_name, date, category_id, source_id, original_text
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-          `, [
-            id,
-            tx.amount,
-            tx.description,
-            tx.merchantName,
-            tx.date.toISOString(),
-            categoryId,
-            sourceId,
-            tx.originalText || tx.description
-          ], (err) => {
-            if (err) reject(err);
-            else {
-              storedCount++;
-              resolve();
-            }
-          });
-        });
+        await dbRun(`
+          INSERT INTO transactions (
+            id, amount, description, merchant_name, date, category_id, source_id, original_text
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          id,
+          tx.amount,
+          tx.description,
+          tx.merchantName,
+          tx.date.toISOString(),
+          categoryId,
+          sourceId,
+          tx.originalText || tx.description
+        ]);
+        storedCount++;
       } catch (error) {
         console.error('Error storing transaction:', error);
       }
@@ -701,20 +686,15 @@ app.post('/api/upload', upload.single('statement'), async (req, res) => {
     console.log(`Successfully stored ${storedCount} transactions, skipped ${duplicateCount} duplicates`);
 
     // Update file record with completion status
-    await new Promise<void>((resolve, reject) => {
-      db.run(`
-        UPDATE uploaded_files SET 
-          transactions_count = ?, 
-          processed_count = ?, 
-          duplicate_count = ?, 
-          status = 'completed',
-          processed_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `, [transactions.length, storedCount, duplicateCount, fileId], (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+    await dbRun(`
+      UPDATE uploaded_files SET 
+        transactions_count = ?, 
+        processed_count = ?, 
+        duplicate_count = ?, 
+        status = 'completed',
+        processed_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [transactions.length, storedCount, duplicateCount, fileId]);
 
     // Clean up uploaded file
     try {
@@ -745,18 +725,13 @@ app.post('/api/upload', upload.single('statement'), async (req, res) => {
     // Update file record with error status if fileId exists
     if (fileId) {
       try {
-        await new Promise<void>((resolve, reject) => {
-          db.run(`
-            UPDATE uploaded_files SET 
-              status = 'failed',
-              error_message = ?,
-              processed_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-          `, [(error as Error).message, fileId], (err) => {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
+        await dbRun(`
+          UPDATE uploaded_files SET 
+            status = 'failed',
+            error_message = ?,
+            processed_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `, [(error as Error).message, fileId]);
       } catch (updateError) {
         console.error('Error updating file status:', updateError);
       }
