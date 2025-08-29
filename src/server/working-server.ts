@@ -184,7 +184,7 @@ const dbRun = async (sql: string, params: any[] = []): Promise<any> => {
 
 // Configure multer for file uploads
 const upload = multer({ 
-  dest: 'uploads/',
+  dest: process.env.NODE_ENV === 'production' ? '/tmp' : 'uploads/',
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
